@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   NotFoundException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,6 +15,8 @@ import { LoginDto } from '../../common/dto/login.dto/login.dto';
 import { UserRole } from 'src/common/enums/user-role.enum';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { randomBytes } from 'crypto';
+import { MailService } from 'src/email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -23,6 +26,7 @@ export class AuthService {
     private userRepository: Repository<User>,
 
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
@@ -130,6 +134,7 @@ export class AuthService {
 
     // 2. hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+    const token = randomBytes(32).toString('hex');
 
     // 3. create user
     const user = this.userRepository.create({
@@ -137,10 +142,16 @@ export class AuthService {
       email,
       role: UserRole.USER,
       password: hashedPassword,
+      verificationToken: token,
+      isVerified: false,
     });
 
     // 4. save
-    return this.userRepository.save(user);
+    await this.mailService.sendVerificationEmail(user.email, token);
+
+    return {
+      message: 'Check your email to verify account',
+    };
   }
 
   async logout(userId: number) {
@@ -150,6 +161,27 @@ export class AuthService {
 
     return {
       message: 'Logged out successfully',
+    };
+  }
+  async verifyEmail(token: string) {
+    const user = await this.userRepository.findOne({
+      where: {
+        verificationToken: token,
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid token');
+    }
+
+    user.isVerified = true;
+
+    user.verificationToken = null;
+
+    await this.userRepository.save(user);
+
+    return {
+      message: 'Email verified successfully',
     };
   }
 }

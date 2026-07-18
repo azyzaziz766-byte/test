@@ -8,12 +8,14 @@ import { User } from '../users/domain/user.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { MailModule } from 'src/email/email.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
 
     PassportModule,
+    MailModule,
 
     JwtModule.register({
       secret: 'JWT_SECRET_KEY',

@@ -1,4 +1,4 @@
-import { Body, Controller, Post ,Get} from '@nestjs/common';
+import { Body, Controller, Post, Get, Query } from '@nestjs/common';
 import { AuthService } from '../application/auth.service';
 
 import { RegisterDto } from '../../common/dto/registre.dto/registre.dto';
@@ -15,40 +15,42 @@ import { Request } from '@nestjs/common';
 
 @Controller('auth')
 export class AuthController {
+  constructor(private authService: AuthService) {}
 
- constructor(private authService:AuthService){}
-
- @Post('register')
-  register(@Body() registerDto:RegisterDto){
+  @Post('register')
+  register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
- @Post('login')
- login(@Body() loginDto:LoginDto){
+  @Post('login')
+  login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
- }
- @Post('refresh')
+  }
+  @Post('refresh')
   refresh(@Body() dto: RefreshTokenDto) {
     return this.authService.refresh(dto.refreshToken);
   }
 
- @UseGuards(JwtAuthGuard,RolesGuard)
- @Roles("user")
- @Get('profile/user')
- getProfile(@Request() req) {
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user')
+  @Get('profile/user')
+  getProfile(@Request() req) {
     return req.user;
- }
+  }
 
- @UseGuards(JwtAuthGuard,RolesGuard)
- @Roles("admin")
- @Get('profile/admin')
- getProfileAdmin(@Request() req) {
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Get('profile/admin')
+  getProfileAdmin(@Request() req) {
     return req.user;
- }
- @UseGuards(JwtAuthGuard)
- @Post("logout")
- logOut(@Request() req){
-   return this.authService.logout(Number(req.user.userId))
- }
-
+  }
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  logOut(@Request() req) {
+    return this.authService.logout(Number(req.user.userId));
+  }
+  @Get('verify-email')
+  async verifyEmail(@Query('token') token: string) {
+    return this.authService.verifyEmail(token);
+  }
 }

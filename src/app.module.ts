@@ -11,6 +11,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
 import { RedisModule } from './redis/redis.module';
+import { MailModule } from './email/email.module';
 @Module({
   imports: [
     CacheModule.register({
@@ -30,7 +31,7 @@ import { RedisModule } from './redis/redis.module';
       password: '<azizRoot123>',
       database: 'test_db',
       autoLoadEntities: true,
-      synchronize: false,
+      synchronize: true,
     }),
     ThrottlerModule.forRoot({
       throttlers: [
@@ -45,6 +46,7 @@ import { RedisModule } from './redis/redis.module';
     AuthModule,
     PaymentModule,
     PaymentModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [
